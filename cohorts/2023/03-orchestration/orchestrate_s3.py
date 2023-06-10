@@ -9,9 +9,12 @@ from sklearn.metrics import mean_squared_error
 import mlflow
 import xgboost as xgb
 from prefect import flow, task
+from prefect_aws import S3Bucket
+from prefect.artifacts import create_markdown_artifact
+from datetime import date
 
 
-@task(retries=3, retry_delay_seconds=2, name="Read taxi data")
+@task(retries=3, retry_delay_seconds=2)
 def read_data(filename: str) -> pd.DataFrame:
     """Read data into DataFrame"""
     df = pd.read_parquet(filename)
@@ -106,11 +109,29 @@ def train_best_model(
         mlflow.log_artifact("models/preprocessor.b", artifact_path="preprocessor")
 
         mlflow.xgboost.log_model(booster, artifact_path="models_mlflow")
+
+        markdown__rmse_report = f"""# RMSE Report
+
+        ## Summary
+
+        Duration Prediction 
+
+        ## RMSE XGBoost Model
+
+        | Region    | RMSE |
+        |:----------|-------:|
+        | {date.today()} | {rmse:.2f} |
+        """
+
+        create_markdown_artifact(
+            key="duration-model-report", markdown=markdown__rmse_report
+        )
+
     return None
 
 
 @flow
-def main_flow(
+def main_flow_s3(
     train_path: str = "./data/green_tripdata_2021-01.parquet",
     val_path: str = "./data/green_tripdata_2021-02.parquet",
 ) -> None:
@@ -121,6 +142,9 @@ def main_flow(
     mlflow.set_experiment("nyc-taxi-experiment")
 
     # Load
+    s3_bucket_block = S3Bucket.load("s3-bucket-block")
+    s3_bucket_block.download_folder_to_path(from_folder="data", to_folder="data")
+
     df_train = read_data(train_path)
     df_val = read_data(val_path)
 
@@ -132,4 +156,4 @@ def main_flow(
 
 
 if __name__ == "__main__":
-    main_flow()
+    main_flow_s3()
