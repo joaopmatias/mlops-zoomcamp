@@ -15,14 +15,15 @@
 
 * [Homework](02-experiment-tracking/homework.md)
 * [Workshop: Weights & Biases](02-experiment-tracking/wandb.md)
+* [Solution MLflow](02-experiment-tracking/solution-mlflow/)
 
 [**Module 3: Orchestration and ML pipelines**](03-orchestration/)
 
 * [Homework](03-orchestration/homework.md)
 
-**Module 4**
+[**Module 4: Model Deployment**](04-deployment)
 
-* TBA
+* [Homework](04-deployment/homework.md)
 
 **Module 5**
 
