@@ -1,0 +1,36 @@
+version: '3.9'
+
+volumes: 
+  grafana_data: {}
+  db:
+    driver: local
+
+networks:
+  back-tier:
+
+services:
+  postgres:
+    image: postgres
+    environment:
+      - POSTGRES_DB=my_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - back-tier
+    volumes: 
+      - db:/var/lib/postgresql/data
+    restart: always
+  grafana:
+    image: grafana/grafana
+    user: "472"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./config/grafana_datasources.yaml:/etc/grafana/provisioning/datasources/datasource.yaml:ro
+      - ./config/grafana_dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml:ro
+      - ./dashboards:/opt/grafana/dashboards
+    networks:
+      - back-tier
+    restart: always
